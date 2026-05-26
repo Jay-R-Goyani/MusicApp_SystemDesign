@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>MusicApp · Class Diagram</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- rough.js renders the hand-drawn relationship lines.
+     Primary CDN is unpkg; if it's blocked we fall back to jsdelivr. -->
+<script src="https://unpkg.com/roughjs@4.6.6/bundled/rough.js"
+        onerror="this.onerror=null;
+                 var s=document.createElement('script');
+                 s.src='https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js';
+                 document.head.appendChild(s);"></script>
+
+<style>
+  :root{
+    /* paper + ink */
+    --paper:        #f3e9d2;
+    --paper-soft:   #fffdf5;
+    --ink:          #1f1c17;
+    --ink-2:        #3d3528;
+    --muted:        #8a7a55;
+
+    /* visibility (UML) */
+    --vis-pub:      #3f7a3a;
+    --vis-prv:      #a23b2e;
+    --vis-pkg:      #b06a1a;
+    --vis-pro:      #6a5410;
+
+    /* group accents — match the pattern-frame colors in the JS */
+    --g-domain:     #6b3d1a;
+    --g-entry:      #3f4a78;
+    --g-facade:     #7a611a;
+    --g-repo:       #6b2e16;
+    --g-service:    #6b2c4a;
+    --g-observer:   #4d3367;
+    --g-strategy:   #36531e;
+    --g-adapter:    #234862;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    font-family:"Kalam", cursive;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 800px at 10% -10%, #faf2dd 0%, transparent 60%),
+      radial-gradient(900px 700px at 90% 110%, #ecdcb6 0%, transparent 50%),
+      var(--paper);
+    min-height:100vh;
+  }
+  /* faint paper grain */
+  body::before{
+    content:""; position:fixed; inset:0;
+    pointer-events:none; z-index:0;
+    opacity:.32;
+    background-image:
+      radial-gradient(rgba(70,50,20,.10) 1px, transparent 1px),
+      radial-gradient(rgba(70,50,20,.05) 1px, transparent 1px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 1px 2px;
+    mix-blend-mode:multiply;
+  }
+
+  /* ───── page chrome ───── */
+  header.page{
+    position:relative; z-index:2;
+    padding:30px 40px 6px;
+  }
+  header.page h1{
+    margin:0;
+    font-family:"Kalam"; font-weight:700;
+    font-size:46px; letter-spacing:.5px;
+    line-height:1;
+  }
+  header.page h1 .dot{ color:var(--g-facade); }
+  header.page .crumbs{
+    color:var(--muted); font-size:19px; margin-top:4px;
+  }
+  .legend{
+    margin:14px 0 4px;
+    display:flex; flex-wrap:wrap; gap:10px 22px;
+    font-size:16px;
+  }
+  .legend .item{
+    display:inline-flex; align-items:center; gap:8px;
+    color:var(--ink-2);
+  }
+  .legend .swatch{
+    display:inline-block;
+    width:18px; height:14px;
+    border:2px dashed currentColor;
+    border-radius:4px;
+    transform:rotate(-3deg);
+  }
+  .legend .item.dom { color:var(--g-domain); }
+  .legend .item.rep { color:var(--g-repo); }
+  .legend .item.svc { color:var(--g-service); }
+  .legend .item.fac { color:var(--g-facade); }
+  .legend .item.obs { color:var(--g-observer); }
+  .legend .item.str { color:var(--g-strategy); }
+  .legend .item.adp { color:var(--g-adapter); }
+
+  /* ───── workboard ───── */
+  .stage{
+    position:relative; z-index:1;
+    width:max-content;
+    padding: 18px 40px 80px;
+  }
+  #canvas{
+    position:relative;
+    width:2640px; height:2040px;
+  }
+  #lines{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+    overflow:visible;
+    z-index:2;
+  }
+
+  /* ───── pattern frames (background regions) ───── */
+  .frame{
+    position:absolute; z-index:1;
+    border:2px dashed;
+    border-radius:18px;
+    background:rgba(255,253,240,.32);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.5);
+  }
+  .frame .label{
+    position:absolute;
+    top:-15px; left:22px;
+    background:var(--paper);
+    padding:0 10px;
+    font-family:"Kalam"; font-weight:700; font-size:21px;
+    letter-spacing:.4px;
+    transform:rotate(-1.4deg);
+  }
+  .frame .label .sub{
+    font-weight:400; font-size:16px;
+    color:var(--muted);
+    margin-left:6px;
+  }
+
+  /* ───── class boxes ───── */
+  .cls{
+    position:absolute; z-index:3;
+    background:var(--paper-soft);
+    border:2px solid var(--ink);
+    border-radius:11px 14px 9px 13px;
+    box-shadow:
+      3px 4px 0 rgba(31,28,23,.18),
+      0 14px 22px -12px rgba(31,28,23,.45);
+    padding:10px 14px 12px;
+    overflow:hidden;
+  }
+  /* sketchnote tilts */
+  .cls.tilt-l{ transform:rotate(-0.85deg); }
+  .cls.tilt-r{ transform:rotate( 0.85deg); }
+  .cls.tilt-z{ transform:rotate(-0.20deg); }
+
+  /* interface differentiation — striped paper, dashed border */
+  .cls.iface{
+    background: repeating-linear-gradient(135deg,
+      var(--paper-soft) 0 14px,
+      #f6ecd0          14px 16px);
+    border-style:dashed;
+  }
+
+  /* group accent stripe along the top edge */
+  .cls::before{
+    content:""; position:absolute;
+    left:8px; right:8px; top:0; height:5px;
+    border-radius:0 0 4px 4px;
+    background:var(--accent, #888);
+    opacity:.9;
+  }
+  .cls.g-domain  { --accent:var(--g-domain);   }
+  .cls.g-entry   { --accent:var(--g-entry);    }
+  .cls.g-facade  { --accent:var(--g-facade);   }
+  .cls.g-repo    { --accent:var(--g-repo);     }
+  .cls.g-service { --accent:var(--g-service);  }
+  .cls.g-observer{ --accent:var(--g-observer); }
+  .cls.g-strategy{ --accent:var(--g-strategy); }
+  .cls.g-adapter { --accent:var(--g-adapter);  }
+
+  /* head */
+  .cls .head{
+    position:relative;
+    padding:5px 0 7px;
+    margin-bottom:6px;
+    border-bottom:1.5px dashed rgba(31,28,23,.32);
+  }
+  .cls .head .stereo{
+    font-family:"Kalam";
+    font-size:13px;
+    color:var(--muted);
+    font-style:italic;
+    margin-bottom:1px;
+    line-height:1.1;
+  }
+  .cls .head .name{
+    font-family:"Kalam"; font-weight:700;
+    font-size:23px; line-height:1.05;
+    letter-spacing:.3px;
+  }
+  .cls.iface .head .name{ font-style:italic; }
+
+  /* pattern badge */
+  .cls .tag{
+    position:absolute;
+    top:2px; right:-2px;
+    transform:rotate(3.5deg);
+    background:var(--accent, #444);
+    color:#fffdf5;
+    font-family:"Kalam"; font-weight:700;
+    font-size:11px; letter-spacing:1.4px;
+    padding:2px 8px; border-radius:4px;
+    box-shadow:1px 2px 0 rgba(0,0,0,.22);
+  }
+
+  /* sections */
+  .cls .section{ padding:3px 0; }
+  .cls .section + .section{
+    border-top:1.5px dashed rgba(31,28,23,.32);
+    margin-top:4px;
+    padding-top:6px;
+  }
+
+  /* rows */
+  .cls .row{
+    font-family:"JetBrains Mono", monospace;
+    font-size:12.5px; line-height:1.6;
+    color:var(--ink-2);
+    white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;
+  }
+  .cls .row.static{
+    text-decoration: underline dotted rgba(31,28,23,.45);
+    text-underline-offset:2px;
+  }
+  .cls .row .vis{
+    display:inline-block;
+    width:12px;
+    font-weight:700;
+    color:var(--muted);
+  }
+  .cls .row .vis.v-pub{ color:var(--vis-pub); }
+  .cls .row .vis.v-prv{ color:var(--vis-prv); }
+  .cls .row .vis.v-pkg{ color:var(--vis-pkg); }
+  .cls .row .vis.v-pro{ color:var(--vis-pro); }
+  .cls .row .ty{ color:var(--muted); }
+  .cls .empty{
+    font-family:"Kalam"; font-style:italic;
+    font-size:13.5px; color:var(--muted);
+    padding:2px 0;
+  }
+
+  /* ───── relationship labels ───── */
+  .rel-label{
+    position:absolute; z-index:4;
+    transform:translate(-50%,-50%) rotate(-2deg);
+    background:var(--paper-soft);
+    border:1.5px solid var(--ink);
+    border-radius:14px;
+    padding:1px 9px;
+    font-family:"Kalam"; font-size:14px;
+    box-shadow:1px 2px 0 rgba(0,0,0,.18);
+    white-space:nowrap;
+  }
+
+  /* ───── sticky notes ───── */
+  .note{
+    position:absolute; z-index:5;
+    background:#fff3a8;
+    color:#3a2f10;
+    border:1px solid rgba(80,60,10,.25);
+    padding:11px 13px 12px;
+    font-family:"Kalam"; font-size:16px; line-height:1.28;
+    box-shadow:
+      2px 4px 0 rgba(0,0,0,.12),
+      6px 12px 22px -8px rgba(60,40,0,.45);
+    transform:rotate(-2.2deg);
+    border-radius:2px 6px 3px 8px;
+    max-width:260px;
+  }
+  .note::before{
+    content:""; position:absolute;
+    left:50%; top:-9px;
+    transform:translateX(-50%) rotate(-4deg);
+    width:64px; height:14px;
+    background:rgba(180,140,40,.55);
+    border-radius:2px;
+    box-shadow:0 2px 3px rgba(0,0,0,.22);
+  }
+
+  footer.foot{
+    position:relative; z-index:2;
+    padding: 8px 40px 32px;
+    color:var(--muted);
+    font-size:14px;
+  }
+</style>
+</head>
+<body>
+
+  <header class="page">
+    <h1>MusicApp <span class="dot">·</span> Class Diagram</h1>
+    <div class="crumbs">Facade · Observer · Strategy · Adapter · Singleton · Factory</div>
+    <div class="legend">
+      <span class="item dom"><span class="swatch"></span>Domain</span>
+      <span class="item rep"><span class="swatch"></span>Repositories</span>
+      <span class="item svc"><span class="swatch"></span>Services</span>
+      <span class="item fac"><span class="swatch"></span>Facade</span>
+      <span class="item obs"><span class="swatch"></span>Observer</span>
+      <span class="item str"><span class="swatch"></span>Strategy</span>
+      <span class="item adp"><span class="swatch"></span>Adapter</span>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div id="canvas">
+      <svg id="lines" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+
+  <footer class="foot">Rendered with rough.js · hand-drawn UML in your browser</footer>
+
+<!-- ============================================================
+     Your diagram script — verbatim
+     ============================================================ -->
+<script>
+/* ============================================================
+   MusicApp class diagram — content + layout + rough.js renderer
+   ============================================================ */
+
+const CANVAS_W = 2640;
+const CANVAS_H = 2040;
+
+/* ---- Class definitions ---------------------------------------- */
+const classes = [
+  /* ============== DOMAIN ============== */
+  {
+    id: 'Song', name: 'Song', group: 'domain', x: 60, y: 90, w: 270, tilt: 'tilt-l',
+    stereo: 'class · domain',
+    fields: [
+      { v: '+', n: 'name', t: 'String' },
+      { v: '+', n: 'artist', t: 'String' },
+      { v: '+', n: 'genre', t: 'String' },
+      { v: '+', n: 'likes', t: 'int' },
+      { v: '+', n: 'duration', t: 'int' },
+      { v: '+', n: 'provider', t: 'MusicProvider' },
+      { v: '+', n: 'externalId', t: 'String' },
+    ],
+    methods: [],
+  },
+  {
+    id: 'User', name: 'User', group: 'domain', x: 350, y: 90, w: 270, tilt: 'tilt-r',
+    stereo: 'class · implements Observer',
+    fields: [
+      { v: '+', n: 'id', t: 'int', s: true },
+      { v: '+', n: 'name', t: 'String' },
+      { v: '+', n: 'email', t: 'String' },
+      { v: '+', n: 'password', t: 'String' },
+    ],
+    methods: [
+      { v: '+', n: 'User(name, email, pwd)', t: '' },
+      { v: '+', n: 'update', a: 'Observable', t: 'void' },
+    ],
+  },
+  {
+    id: 'PlayList', name: 'PlayList', group: 'domain', x: 650, y: 90, w: 290, tilt: 'tilt-z',
+    stereo: 'class · domain',
+    fields: [
+      { v: '-', n: 'name', t: 'String' },
+      { v: '-', n: 'owner', t: 'User' },
+      { v: '-', n: 'songs', t: 'List<Song>' },
+      { v: '-', n: 'followers', t: 'List<User>' },
+    ],
+    methods: [
+      { v: '+', n: 'PlayList(name, owner)' },
+      { v: '+', n: 'getName', t: 'String' },
+      { v: '+', n: 'getOwner', t: 'User' },
+      { v: '+', n: 'getSongs', t: 'List<Song>' },
+      { v: '+', n: 'getFollowers', t: 'List<User>' },
+    ],
+  },
+
+  /* ============== FACADE / ENTRY ============== */
+  {
+    id: 'Main', name: 'Main', group: 'entry', x: 970, y: 90, w: 250, tilt: 'tilt-r',
+    stereo: 'class · entry point',
+    fields: [],
+    methods: [
+      { v: '+', n: 'main', a: 'String[]', t: 'void', s: true },
+    ],
+  },
+  {
+    id: 'MusicFacade', name: 'MusicFacade', group: 'facade', x: 970, y: 270, w: 380, tilt: 'tilt-z',
+    stereo: 'class · «facade»',
+    tag: 'FACADE',
+    fields: [
+      { v: '-', n: 'authService', t: 'AuthService' },
+      { v: '-', n: 'playListService', t: 'PlayListService' },
+      { v: '-', n: 'playListRepository', t: 'PlayListRepository' },
+      { v: '-', n: 'providerRegistry', t: 'ProviderRegistry' },
+      { v: '-', n: 'player', t: 'MusicPlayer' },
+      { v: '-', n: 'playbackStrategy', t: 'PlaybackStrategy' },
+      { v: '-', n: 'currentUser', t: 'User' },
+    ],
+    methods: [
+      { v: '+', n: 'register', a: 'name, email, pwd', t: 'void' },
+      { v: '+', n: 'login', a: 'email, pwd', t: 'User' },
+      { v: '+', n: 'createPlaylist', a: 'name', t: 'PlayList' },
+      { v: '+', n: 'addSong', a: 'pl, prov, id', t: 'void' },
+      { v: '+', n: 'removeSong', a: 'pl, song', t: 'void' },
+      { v: '+', n: 'followPlaylist', a: 'pl', t: 'void' },
+      { v: '+', n: 'play', a: 'pl, method', t: 'void' },
+      { v: '+', n: 'next', t: 'void' },
+      { v: '+', n: 'pause', t: 'void' },
+      { v: '+', n: 'getCurrentUser', t: 'User' },
+    ],
+  },
+  {
+    id: 'MusicPlayer', name: 'MusicPlayer', group: 'facade', x: 1390, y: 270, w: 320, tilt: 'tilt-l',
+    stereo: 'class · playback host',
+    fields: [
+      { v: '-', n: 'song', t: 'Song' },
+      { v: '-', n: 'playbackStrategy', t: 'PlaybackStrategy' },
+      { v: '-', n: 'providerRegistry', t: 'ProviderRegistry' },
+    ],
+    methods: [
+      { v: '+', n: 'MusicPlayer()' },
+      { v: '+', n: 'MusicPlayer', a: 'registry' },
+      { v: '~', n: 'load', a: 'prov, songId', t: 'void' },
+      { v: '~', n: 'setPlaybackStrategy', a: 'ps', t: 'void' },
+      { v: '~', n: 'setStrategy', a: 'method, pl', t: 'void' },
+      { v: '~', n: 'play', t: 'void' },
+      { v: '~', n: 'pause', t: 'void' },
+      { v: '~', n: 'playNext', t: 'void' },
+    ],
+  },
+
+  /* ============== REPOSITORY ============== */
+  {
+    id: 'UserRepository', name: 'UserRepository', group: 'repo', x: 60, y: 420, w: 280, tilt: 'tilt-r',
+    stereo: 'class · «singleton»',
+    tag: 'SINGLE',
+    fields: [
+      { v: '+', n: 'users', t: 'Map<String,User>' },
+      { v: '-', n: 'instance', t: 'UserRepository', s: true },
+    ],
+    methods: [
+      { v: '+', n: 'getInstance', t: 'UserRepository', s: true },
+      { v: '+', n: 'save', a: 'User', t: 'void' },
+      { v: '+', n: 'findByEmail', a: 'String', t: 'User' },
+    ],
+  },
+  {
+    id: 'PlayListRepository', name: 'PlayListRepository', group: 'repo', x: 360, y: 420, w: 300, tilt: 'tilt-l',
+    stereo: 'class · «singleton»',
+    tag: 'SINGLE',
+    fields: [
+      { v: '-', n: 'playLists', t: 'Map<Key,PlayList>' },
+      { v: '-', n: 'playlistObservables', t: 'Map<PL,PObs>' },
+      { v: '-', n: 'instance', t: 'PlayListRepository', s: true },
+    ],
+    methods: [
+      { v: '+', n: 'getInstance', t: 'PlayListRepository', s: true },
+      { v: '+', n: 'save', a: 'PlayList', t: 'void' },
+      { v: '+', n: 'findByNameAndOwner', a: 'name, owner', t: 'PlayList' },
+      { v: '+', n: 'getPlaylistObservable', a: 'pl', t: 'PlaylistObservable' },
+    ],
+  },
+
+  /* ============== SERVICE ============== */
+  {
+    id: 'AuthService', name: 'AuthService', group: 'service', x: 60, y: 720, w: 280, tilt: 'tilt-l',
+    stereo: 'class · service',
+    fields: [
+      { v: '-', n: 'userRepository', t: 'UserRepository', s: true },
+    ],
+    methods: [
+      { v: '+', n: 'AuthService()' },
+      { v: '+', n: 'register', a: 'name, email, pwd', t: 'void' },
+      { v: '+', n: 'login', a: 'email, pwd', t: 'User' },
+    ],
+  },
+  {
+    id: 'PlayListService', name: 'PlayListService', group: 'service', x: 360, y: 770, w: 300, tilt: 'tilt-r',
+    stereo: 'class · service',
+    fields: [
+      { v: '-', n: 'playListRepository', t: 'PlayListRepository' },
+    ],
+    methods: [
+      { v: '+', n: 'PlayListService', a: 'repo' },
+      { v: '+', n: 'createPlaylist', a: 'owner, name', t: 'PlayList' },
+      { v: '+', n: 'addSong', a: 'song, user, pl', t: 'void' },
+      { v: '+', n: 'addFollower', a: 'user, pl', t: 'void' },
+      { v: '+', n: 'removeSong', a: 'user, song, pl', t: 'void' },
+      { v: '+', n: 'removeFollower', a: 'user, pl', t: 'void' },
+    ],
+  },
+
+  /* ============== OBSERVER ============== */
+  {
+    id: 'Observer', name: 'Observer', group: 'observer', x: 60, y: 990, w: 280, tilt: 'tilt-r', iface: true,
+    stereo: '«interface»',
+    tag: 'OBSERVER',
+    fields: [],
+    methods: [
+      { v: '+', n: 'update', a: 'Observable', t: 'void' },
+    ],
+  },
+  {
+    id: 'Observable', name: 'Observable', group: 'observer', x: 60, y: 1150, w: 280, tilt: 'tilt-l', iface: true,
+    stereo: '«interface»',
+    fields: [],
+    methods: [
+      { v: '+', n: 'addObserver', a: 'Observer', t: 'void' },
+      { v: '+', n: 'removeObserver', a: 'Observer', t: 'void' },
+      { v: '+', n: 'notifyObservers', t: 'void' },
+    ],
+  },
+  {
+    id: 'PlaylistObservable', name: 'PlaylistObservable', group: 'observer', x: 360, y: 1100, w: 320, tilt: 'tilt-z',
+    stereo: 'class · implements Observable',
+    fields: [
+      { v: '-', n: 'observers', t: 'List<Observer>' },
+      { v: '-', n: 'playList', t: 'PlayList' },
+      { v: '-', n: 'song', t: 'Song' },
+      { v: '-', n: 'user', t: 'User' },
+      { v: '-', n: 'action', t: 'String' },
+    ],
+    methods: [
+      { v: '+', n: 'PlaylistObservable', a: 'pl' },
+      { v: '+', n: 'addObserver', a: 'o', t: 'void' },
+      { v: '+', n: 'removeObserver', a: 'o', t: 'void' },
+      { v: '+', n: 'notifyObservers', t: 'void' },
+      { v: '+', n: 'notify', a: 'song, action', t: 'void' },
+      { v: '+', n: 'getSong', t: 'Song' },
+      { v: '+', n: 'getAction', t: 'String' },
+    ],
+  },
+
+  /* ============== STRATEGY ============== */
+  {
+    id: 'PlayMethods', name: 'PlayMethods', group: 'strategy', x: 1750, y: 90, w: 210, tilt: 'tilt-r',
+    stereo: '«enum»',
+    tag: 'ENUM',
+    fields: [
+      { v: ' ', n: 'SEQUENTIAL' },
+      { v: ' ', n: 'SHUFFLE' },
+      { v: ' ', n: 'CUSTOM' },
+    ],
+    methods: [],
+  },
+  {
+    id: 'Strategy', name: 'Strategy', group: 'strategy', x: 1990, y: 90, w: 230, tilt: 'tilt-l', iface: true,
+    stereo: '«interface»',
+    tag: 'STRATEGY',
+    fields: [],
+    methods: [
+      { v: '+', n: 'execute', t: 'Song' },
+    ],
+  },
+  {
+    id: 'StrategyContext', name: 'StrategyContext', group: 'strategy', x: 2250, y: 90, w: 260, tilt: 'tilt-r', iface: true,
+    stereo: '«interface»',
+    fields: [],
+    methods: [
+      { v: '+', n: 'setStrategy', a: 'Strategy', t: 'void' },
+      { v: '+', n: 'executeStrategy', t: 'Song' },
+    ],
+  },
+  {
+    id: 'PlaybackStrategy', name: 'PlaybackStrategy', group: 'strategy', x: 2240, y: 300, w: 290, tilt: 'tilt-l',
+    stereo: 'class · implements StrategyContext',
+    fields: [
+      { v: '-', n: 'strategy', t: 'Strategy' },
+    ],
+    methods: [
+      { v: '+', n: 'PlaybackStrategy()' },
+      { v: '+', n: 'setStrategy', a: 'Strategy', t: 'void' },
+      { v: '+', n: 'executeStrategy', t: 'Song' },
+    ],
+  },
+  {
+    id: 'StrategyProvider', name: 'StrategyProvider', group: 'strategy', x: 1750, y: 300, w: 240, tilt: 'tilt-z',
+    stereo: 'class · «factory»',
+    tag: 'FACTORY',
+    fields: [],
+    methods: [
+      { v: '+', n: 'getStrategy', a: 'm, pl', t: 'Strategy', s: true },
+      { v: '+', n: 'getStrategy', a: 'm, pl, i', t: 'Strategy', s: true },
+      { v: '+', n: 'getStrategy', a: 'pl, order', t: 'Strategy', s: true },
+    ],
+  },
+  {
+    id: 'SequentialStrategy', name: 'SequentialStrategy', group: 'strategy', x: 2020, y: 600, w: 230, tilt: 'tilt-l',
+    stereo: 'class · implements Strategy',
+    fields: [
+      { v: '-', n: 'playList', t: 'PlayList' },
+      { v: '-', n: 'currentIndex', t: 'int' },
+    ],
+    methods: [
+      { v: '+', n: 'execute', t: 'Song' },
+      { v: '+', n: 'setPlayList', a: 'pl', t: 'void' },
+    ],
+  },
+  {
+    id: 'ShuffleStrategy', name: 'ShuffleStrategy', group: 'strategy', x: 2280, y: 600, w: 240, tilt: 'tilt-r',
+    stereo: 'class · implements Strategy',
+    fields: [
+      { v: '-', n: 'playList', t: 'PlayList' },
+      { v: '-', n: 'shuffled', t: 'List<Song>' },
+      { v: '-', n: 'currentIndex', t: 'int' },
+    ],
+    methods: [
+      { v: '+', n: 'execute', t: 'Song' },
+    ],
+  },
+  {
+    id: 'CustomStrategy', name: 'CustomStrategy', group: 'strategy', x: 2550, y: 600, w: 240, tilt: 'tilt-z',
+    stereo: 'class · implements Strategy',
+    fields: [
+      { v: '-', n: 'playList', t: 'PlayList' },
+      { v: '-', n: 'customOrder', t: 'List<Song>' },
+      { v: '-', n: 'currentIndex', t: 'int' },
+      { v: '-', n: 'playListIndex', t: 'int' },
+      { v: '-', n: 'inCustomOrder', t: 'boolean' },
+    ],
+    methods: [
+      { v: '+', n: 'execute', t: 'Song' },
+    ],
+  },
+
+  /* ============== ADAPTER ============== */
+  {
+    id: 'MusicProvider', name: 'MusicProvider', group: 'adapter', x: 700, y: 1450, w: 220, tilt: 'tilt-r',
+    stereo: '«enum»',
+    tag: 'ENUM',
+    fields: [
+      { v: ' ', n: 'SPOTIFY' },
+      { v: ' ', n: 'YOUTUBE' },
+      { v: ' ', n: 'LOCAL' },
+    ],
+    methods: [],
+  },
+  {
+    id: 'MusicProviderAdapter', name: 'MusicProviderAdapter', group: 'adapter', x: 950, y: 1450, w: 310, tilt: 'tilt-l', iface: true,
+    stereo: '«interface»',
+    tag: 'ADAPTER',
+    fields: [],
+    methods: [
+      { v: '+', n: 'getType', t: 'MusicProvider' },
+      { v: '+', n: 'fetchSong', a: 'String', t: 'Song' },
+    ],
+  },
+  {
+    id: 'ProviderRegistry', name: 'ProviderRegistry', group: 'adapter', x: 1290, y: 1450, w: 300, tilt: 'tilt-z',
+    stereo: 'class · «singleton»',
+    tag: 'SINGLE',
+    fields: [
+      { v: '-', n: 'adapters', t: 'Map<MP,Adapter>' },
+      { v: '-', n: 'instance', t: 'ProviderRegistry', s: true },
+    ],
+    methods: [
+      { v: '+', n: 'getInstance', t: 'ProviderRegistry', s: true },
+      { v: '+', n: 'register', a: 'adapter', t: 'void' },
+      { v: '+', n: 'get', a: 'type', t: 'MusicProviderAdapter' },
+    ],
+  },
+  {
+    id: 'SpotifyMusicProvider', name: 'SpotifyMusicProvider', group: 'adapter', x: 1620, y: 1450, w: 290, tilt: 'tilt-l',
+    stereo: 'class · adapter',
+    fields: [
+      { v: '-', n: 'apiKey', t: 'String' },
+    ],
+    methods: [
+      { v: '+', n: 'getType', t: 'MusicProvider' },
+      { v: '+', n: 'fetchSong', a: 'String', t: 'Song' },
+      { v: '-', n: 'callSpotifyApi', a: 'id', t: 'DTO' },
+      { v: '-', n: 'toSong', a: 'dto', t: 'Song' },
+    ],
+  },
+  {
+    id: 'YoutubeMusicProvider', name: 'YoutubeMusicProvider', group: 'adapter', x: 1940, y: 1450, w: 290, tilt: 'tilt-r',
+    stereo: 'class · adapter',
+    fields: [
+      { v: '-', n: 'apiKey', t: 'String' },
+    ],
+    methods: [
+      { v: '+', n: 'getType', t: 'MusicProvider' },
+      { v: '+', n: 'fetchSong', a: 'String', t: 'Song' },
+      { v: '-', n: 'callYoutubeApi', a: 'id', t: 'DTO' },
+      { v: '-', n: 'toSong', a: 'dto', t: 'Song' },
+    ],
+  },
+  {
+    id: 'LocalMusicProvider', name: 'LocalMusicProvider', group: 'adapter', x: 2260, y: 1450, w: 290, tilt: 'tilt-z',
+    stereo: 'class · adapter',
+    fields: [
+      { v: '-', n: 'musicDirectory', t: 'String' },
+    ],
+    methods: [
+      { v: '+', n: 'getType', t: 'MusicProvider' },
+      { v: '+', n: 'fetchSong', a: 'String', t: 'Song' },
+      { v: '-', n: 'readMetadata', a: 'id', t: 'Metadata' },
+      { v: '-', n: 'toSong', a: 'meta', t: 'Song' },
+    ],
+  },
+];
+
+/* ---- Pattern frames ------------------------------------------ */
+const frames = [
+  { label: 'Facade Pattern', sub: 'one entry point', x: 945, y: 245, w: 770, h: 720, color: '#6a5410' },
+  { label: 'Observer Pattern', sub: 'playlist notifications', x: 40, y: 965, w: 660, h: 425, color: '#4d3367' },
+  { label: 'Strategy Pattern', sub: 'pluggable playback', x: 1730, y: 65, w: 1075, h: 800, color: '#36531e' },
+  { label: 'Adapter Pattern', sub: 'unified music sources', x: 680, y: 1425, w: 1890, h: 280, color: '#234862' },
+  { label: 'Domain', sub: 'entities', x: 40, y: 65, w: 920, h: 320, color: '#6b3d1a' },
+  { label: 'Repositories', sub: 'singletons · in-memory', x: 40, y: 395, w: 640, h: 290, color: '#6b2e16' },
+  { label: 'Services', sub: 'business rules', x: 40, y: 695, w: 640, h: 260, color: '#6b2c4a' },
+];
+
+/* ---- Sticky notes ------------------------------------------- */
+const notes = [
+  { x: 1880, y: 1730, text: '3 concrete adapters share one interface — registry exposes them by enum key.', w: 240 },
+  { x: 960, y: 800, text: 'MusicFacade hides 6 collaborators behind one tidy API for Main.', w: 230 },
+  { x: 380, y: 1465, text: 'User listens; PlaylistObservable fires on ADD/REMOVE events.', w: 230 },
+  { x: 2580, y: 920, text: 'StrategyProvider = static factory choosing between 3 strategies.', w: 220 },
+];
+
+/* ---- Relationships ----------------------------------------- */
+const relations = [
+  // Implements interfaces
+  { from: 'User', to: 'Observer', type: 'realize', side: ['right', 'top'] },
+  { from: 'PlaylistObservable', to: 'Observable', type: 'realize', side: ['left', 'right'] },
+  { from: 'SpotifyMusicProvider', to: 'MusicProviderAdapter', type: 'realize', side: ['top', 'bottom'] },
+  { from: 'YoutubeMusicProvider', to: 'MusicProviderAdapter', type: 'realize', side: ['top', 'bottom'] },
+  { from: 'LocalMusicProvider', to: 'MusicProviderAdapter', type: 'realize', side: ['top', 'bottom'] },
+  { from: 'SequentialStrategy', to: 'Strategy', type: 'realize', side: ['top', 'bottom'] },
+  { from: 'ShuffleStrategy', to: 'Strategy', type: 'realize', side: ['top', 'bottom'] },
+  { from: 'CustomStrategy', to: 'Strategy', type: 'realize', side: ['top', 'bottom'] },
+  { from: 'PlaybackStrategy', to: 'StrategyContext', type: 'realize', side: ['top', 'bottom'] },
+
+  // PlayList composition
+  { from: 'PlayList', to: 'Song', type: 'aggreg', side: ['bottom', 'bottom'], label: 'songs *' },
+  { from: 'PlayList', to: 'User', type: 'aggreg', side: ['bottom', 'bottom'], label: 'owner / followers' },
+  { from: 'Song', to: 'MusicProvider', type: 'uses', side: ['bottom', 'top'], label: 'provider' },
+
+  // Repositories own
+  { from: 'UserRepository', to: 'User', type: 'aggreg', side: ['top', 'bottom'], label: 'users' },
+  { from: 'PlayListRepository', to: 'PlayList', type: 'aggreg', side: ['top', 'bottom'], label: 'playLists' },
+  { from: 'PlayListRepository', to: 'PlaylistObservable', type: 'compose', side: ['bottom', 'top'], label: 'observables' },
+
+  // Services use repos
+  { from: 'AuthService', to: 'UserRepository', type: 'uses', side: ['top', 'bottom'] },
+  { from: 'PlayListService', to: 'PlayListRepository', type: 'uses', side: ['top', 'bottom'] },
+  { from: 'PlayListService', to: 'PlaylistObservable', type: 'uses', side: ['bottom', 'top'], label: 'notifies' },
+
+  // Observer wiring
+  { from: 'PlaylistObservable', to: 'Observer', type: 'aggreg', side: ['left', 'right'], label: 'observers *' },
+
+  // Facade dependencies
+  { from: 'MusicFacade', to: 'AuthService', type: 'compose', side: ['left', 'right'] },
+  { from: 'MusicFacade', to: 'PlayListService', type: 'compose', side: ['left', 'right'] },
+  { from: 'MusicFacade', to: 'MusicPlayer', type: 'compose', side: ['right', 'left'] },
+  { from: 'MusicFacade', to: 'PlayListRepository', type: 'uses', side: ['left', 'right'] },
+  { from: 'MusicFacade', to: 'ProviderRegistry', type: 'uses', side: ['bottom', 'top'] },
+  { from: 'MusicFacade', to: 'User', type: 'uses', side: ['top', 'bottom'], label: 'currentUser' },
+
+  // Main
+  { from: 'Main', to: 'MusicFacade', type: 'uses', side: ['bottom', 'top'] },
+  { from: 'Main', to: 'ProviderRegistry', type: 'uses', side: ['right', 'top'], label: 'register' },
+
+  // MusicPlayer
+  { from: 'MusicPlayer', to: 'PlaybackStrategy', type: 'compose', side: ['right', 'left'] },
+  { from: 'MusicPlayer', to: 'ProviderRegistry', type: 'uses', side: ['bottom', 'top'] },
+  { from: 'MusicPlayer', to: 'Song', type: 'uses', side: ['top', 'right'] },
+  { from: 'MusicPlayer', to: 'StrategyProvider', type: 'uses', side: ['right', 'left'], label: 'via setStrategy()' },
+
+  // Strategy plumbing
+  { from: 'PlaybackStrategy', to: 'Strategy', type: 'compose', side: ['top', 'right'] },
+  { from: 'StrategyProvider', to: 'PlayMethods', type: 'uses', side: ['top', 'bottom'] },
+  { from: 'StrategyProvider', to: 'SequentialStrategy', type: 'uses', side: ['bottom', 'top'], label: 'creates' },
+  { from: 'StrategyProvider', to: 'ShuffleStrategy', type: 'uses', side: ['bottom', 'top'], label: 'creates' },
+  { from: 'StrategyProvider', to: 'CustomStrategy', type: 'uses', side: ['bottom', 'top'], label: 'creates' },
+
+  // Adapter registry
+  { from: 'ProviderRegistry', to: 'MusicProviderAdapter', type: 'aggreg', side: ['left', 'right'], label: 'adapters' },
+  { from: 'ProviderRegistry', to: 'MusicProvider', type: 'uses', side: ['left', 'right'], label: 'enum key' },
+
+  // Adapters produce Songs
+  { from: 'SpotifyMusicProvider', to: 'Song', type: 'uses', side: ['top', 'bottom'], label: 'fetchSong' },
+  { from: 'YoutubeMusicProvider', to: 'Song', type: 'uses', side: ['top', 'bottom'], label: 'fetchSong' },
+  { from: 'LocalMusicProvider',   to: 'Song', type: 'uses', side: ['top', 'bottom'], label: 'fetchSong' },
+
+  // Strategies operate on a PlayList (held as field)
+  { from: 'SequentialStrategy', to: 'PlayList', type: 'uses', side: ['top', 'right'], label: 'playList' },
+  { from: 'ShuffleStrategy',    to: 'PlayList', type: 'uses', side: ['top', 'right'], label: 'playList' },
+  { from: 'CustomStrategy',     to: 'PlayList', type: 'uses', side: ['top', 'right'], label: 'playList' },
+
+  // Observer carries playlist context to subscribers
+  { from: 'PlaylistObservable', to: 'PlayList', type: 'compose', side: ['top', 'bottom'], label: 'playList' },
+  { from: 'PlaylistObservable', to: 'Song',     type: 'uses',    side: ['top', 'bottom'], label: 'song' },
+
+  // Services manipulate domain entities
+  { from: 'AuthService',     to: 'User', type: 'uses', side: ['right', 'bottom'], label: 'authenticates' },
+  { from: 'PlayListService', to: 'Song', type: 'uses', side: ['top', 'bottom'],   label: 'add / remove' },
+  { from: 'PlayListService', to: 'User', type: 'uses', side: ['right', 'bottom'], label: 'followers' },
+
+  // Facade & Player wiring that was implicit
+  { from: 'MusicFacade', to: 'PlayMethods',     type: 'uses',    side: ['top', 'left'],   label: 'method' },
+  { from: 'MusicFacade', to: 'PlaybackStrategy',type: 'compose', side: ['right', 'left'], label: 'strategy ctx' },
+  { from: 'MusicPlayer', to: 'MusicProviderAdapter', type: 'uses', side: ['bottom', 'top'], label: 'load via' },
+
+  // StrategyProvider needs the playlist to build a strategy
+  { from: 'StrategyProvider', to: 'PlayList', type: 'uses', side: ['left', 'right'], label: 'pl param' },
+];
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+
+const canvas = document.getElementById('canvas');
+const svg = document.getElementById('lines');
+
+/* --- Frames first (background layer) --- */
+frames.forEach(f => {
+  const el = document.createElement('div');
+  el.className = 'frame';
+  el.style.left = f.x + 'px';
+  el.style.top = f.y + 'px';
+  el.style.width = f.w + 'px';
+  el.style.height = f.h + 'px';
+  el.style.borderColor = f.color + '55';
+  el.innerHTML = `<span class="label" style="color:${f.color}">${f.label}<span class="sub">— ${f.sub}</span></span>`;
+  canvas.appendChild(el);
+});
+
+/* --- Class boxes --- */
+const positions = {};
+classes.forEach(c => {
+  const el = document.createElement('div');
+  el.className = `cls g-${c.group} ${c.tilt || ''} ${c.iface ? 'iface' : ''}`;
+  el.style.left = c.x + 'px';
+  el.style.top = c.y + 'px';
+  el.style.width = c.w + 'px';
+  el.dataset.id = c.id;
+
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const tagHtml = c.tag ? `<span class="tag">${esc(c.tag)}</span>` : '';
+  const stereoHtml = c.stereo ? `<div class="stereo">${esc(c.stereo)}</div>` : '';
+  const fieldRows = (c.fields && c.fields.length)
+    ? c.fields.map(f => `<div class="row${f.s ? ' static' : ''}"><span class="vis">${esc(f.v)}</span>${esc(f.n)}${f.t ? ` <span class="ty">: ${esc(f.t)}</span>` : ''}</div>`).join('')
+    : '<div class="empty">— no fields —</div>';
+  const methodRows = (c.methods && c.methods.length)
+    ? c.methods.map(m => `<div class="row${m.s ? ' static' : ''}"><span class="vis">${esc(m.v)}</span>${esc(m.n)}(${esc(m.a || '')})${m.t ? ` <span class="ty">: ${esc(m.t)}</span>` : ''}</div>`).join('')
+    : '';
+
+  el.innerHTML = `
+    <div class="head">${tagHtml}${stereoHtml}<div class="name">${esc(c.name)}</div></div>
+    ${(c.fields && c.fields.length) || !c.methods.length ? `<div class="section">${fieldRows}</div>` : ''}
+    ${methodRows ? `<div class="section">${methodRows}</div>` : ''}
+  `;
+  canvas.appendChild(el);
+});
+
+/* --- Measure boxes after layout --- */
+function init() {
+  classes.forEach(c => {
+    const el = canvas.querySelector(`[data-id="${c.id}"]`);
+    if (!el) return;
+    positions[c.id] = {
+      x: el.offsetLeft, y: el.offsetTop,
+      w: el.offsetWidth, h: el.offsetHeight,
+    };
+  });
+  colorVisibility();
+  drawLines();
+  placeNotes();
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  waitForRough(init);
+} else {
+  window.addEventListener('DOMContentLoaded', () => waitForRough(init));
+}
+
+/* Poll briefly until rough.js is on window, then run cb.
+   Keeps the rest of the script unchanged. */
+function waitForRough(cb, tries = 0) {
+  if (typeof rough !== 'undefined') { setTimeout(cb, 60); return; }
+  if (tries > 80) {                                  // ~8s max
+    console.error('rough.js failed to load from both CDNs');
+    document.body.insertAdjacentHTML('afterbegin',
+      '<div style="background:#a23b2e;color:#fff;padding:14px 20px;font:16px Kalam,cursive;">' +
+      'Could not load rough.js — relationship lines will not render. ' +
+      'Check network access to unpkg.com / jsdelivr.net.</div>');
+    return;
+  }
+  setTimeout(() => waitForRough(cb, tries + 1), 100);
+}
+
+/* Color the +/-/~ markers (UML convention) */
+function colorVisibility(){
+  document.querySelectorAll('.cls .row .vis').forEach(el => {
+    const v = (el.textContent || '').trim();
+    if (v === '+') el.classList.add('v-pub');
+    else if (v === '-') el.classList.add('v-prv');
+    else if (v === '~') el.classList.add('v-pkg');
+    else if (v === '#') el.classList.add('v-pro');
+  });
+}
+
+function anchorPoint(box, side) {
+  switch (side) {
+    case 'top':    return { x: box.x + box.w / 2, y: box.y - 6 };
+    case 'bottom': return { x: box.x + box.w / 2, y: box.y + box.h + 6 };
+    case 'left':   return { x: box.x - 6,         y: box.y + box.h / 2 };
+    case 'right':  return { x: box.x + box.w + 6, y: box.y + box.h / 2 };
+  }
+}
+
+/* --- rough.js drawing of relationships --- */
+function drawLines() {
+  const rc = rough.svg(svg, { options: { roughness: 1.2, bowing: 1.5, seed: 7 } });
+  svg.innerHTML = '';
+
+  relations.forEach((rel, idx) => {
+    const a = positions[rel.from];
+    const b = positions[rel.to];
+    if (!a || !b) {
+      console.warn('Missing position:', rel.from, rel.to);
+      return;
+    }
+    const [sA, sB] = rel.side;
+    const p1 = anchorPoint(a, sA);
+    const p2 = anchorPoint(b, sB);
+
+    const pull = 28;
+    const c1 = { x: p1.x, y: p1.y };
+    const c2 = { x: p2.x, y: p2.y };
+    if (sA === 'top')    c1.y -= pull;
+    if (sA === 'bottom') c1.y += pull;
+    if (sA === 'left')   c1.x -= pull;
+    if (sA === 'right')  c1.x += pull;
+    if (sB === 'top')    c2.y -= pull;
+    if (sB === 'bottom') c2.y += pull;
+    if (sB === 'left')   c2.x -= pull;
+    if (sB === 'right')  c2.x += pull;
+
+    const dashed = (rel.type === 'realize' || rel.type === 'uses');
+    const stroke = '#1f1c17';
+
+    const pathData = `M ${p1.x} ${p1.y} L ${c1.x} ${c1.y} L ${c2.x} ${c2.y} L ${p2.x} ${p2.y}`;
+
+    const opt = {
+      stroke,
+      strokeWidth: 2,
+      roughness: 1.4,
+      bowing: 1.0,
+      seed: 100 + idx,
+    };
+    if (dashed) {
+      opt.strokeLineDash = rel.type === 'realize' ? [8, 6] : [3, 5];
+    }
+    const node = rc.path(pathData, opt);
+    svg.appendChild(node);
+
+    drawDecoration(rc, p2, sB, rel.type, idx);
+    if (rel.type === 'compose' || rel.type === 'aggreg') {
+      drawDiamond(rc, p1, sA, rel.type === 'compose', idx);
+    }
+
+    if (rel.label) {
+      const mx = (c1.x + c2.x) / 2;
+      const my = (c1.y + c2.y) / 2;
+      const lbl = document.createElement('div');
+      lbl.className = 'rel-label';
+      lbl.style.left = mx + 'px';
+      lbl.style.top = my + 'px';
+      lbl.textContent = rel.label;
+      canvas.appendChild(lbl);
+    }
+  });
+}
+
+function drawDecoration(rc, p, side, type, seed) {
+  if (type === 'compose' || type === 'aggreg') return;
+
+  const size = 12;
+  let dx = 0, dy = 0;
+  if (side === 'top')    { dy = -1; }
+  if (side === 'bottom') { dy = 1; }
+  if (side === 'left')   { dx = -1; }
+  if (side === 'right')  { dx = 1; }
+  const tipX = p.x;
+  const tipY = p.y;
+  const perpX = -dy, perpY = dx;
+  const baseX = tipX + dx * size;
+  const baseY = tipY + dy * size;
+  const wing1 = { x: baseX + perpX * (size * 0.55), y: baseY + perpY * (size * 0.55) };
+  const wing2 = { x: baseX - perpX * (size * 0.55), y: baseY - perpY * (size * 0.55) };
+
+  if (type === 'realize' || type === 'extends') {
+    const poly = `M ${tipX} ${tipY} L ${wing1.x} ${wing1.y} L ${wing2.x} ${wing2.y} Z`;
+    const node = rc.path(poly, {
+      stroke: '#1f1c17', strokeWidth: 2, fill: '#fffdf5', fillStyle: 'solid',
+      roughness: 1.1, seed: 200 + seed,
+    });
+    svg.appendChild(node);
+  } else if (type === 'uses') {
+    const poly = `M ${tipX} ${tipY} L ${wing1.x} ${wing1.y} L ${wing2.x} ${wing2.y} Z`;
+    const node = rc.path(poly, {
+      stroke: '#1f1c17', strokeWidth: 2, fill: '#1f1c17', fillStyle: 'solid',
+      roughness: 1.0, seed: 300 + seed,
+    });
+    svg.appendChild(node);
+  }
+}
+
+function drawDiamond(rc, p, side, filled, seed) {
+  const size = 10;
+  let dx = 0, dy = 0;
+  if (side === 'top')    { dy = -1; }
+  if (side === 'bottom') { dy =  1; }
+  if (side === 'left')   { dx = -1; }
+  if (side === 'right')  { dx =  1; }
+  const tipX = p.x;
+  const tipY = p.y;
+  const farX = tipX + dx * size * 2;
+  const farY = tipY + dy * size * 2;
+  const perpX = -dy, perpY = dx;
+  const sideX = (tipX + farX) / 2;
+  const sideY = (tipY + farY) / 2;
+  const s1 = { x: sideX + perpX * size * 0.8, y: sideY + perpY * size * 0.8 };
+  const s2 = { x: sideX - perpX * size * 0.8, y: sideY - perpY * size * 0.8 };
+  const poly = `M ${tipX} ${tipY} L ${s1.x} ${s1.y} L ${farX} ${farY} L ${s2.x} ${s2.y} Z`;
+  const node = rc.path(poly, {
+    stroke: '#1f1c17',
+    strokeWidth: 2,
+    fill: filled ? '#1f1c17' : '#fffdf5',
+    fillStyle: 'solid',
+    roughness: 1.0,
+    seed: 400 + seed,
+  });
+  svg.appendChild(node);
+}
+
+function placeNotes() {
+  notes.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'note';
+    el.style.left = n.x + 'px';
+    el.style.top = n.y + 'px';
+    if (n.w) el.style.width = n.w + 'px';
+    el.textContent = n.text;
+    canvas.appendChild(el);
+  });
+}
+</script>
+</body>
+</html>
